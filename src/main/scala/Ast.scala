@@ -17,7 +17,6 @@ sealed trait Expression {
   val t: Type
 }
 case class Literal(value: Any, t: Type) extends Expression
-case class Value(value: Any, t: Type)
 case class Reference(name: String, t: Type) extends Expression
 
 sealed trait Statement extends Segment
@@ -31,3 +30,5 @@ case class Program(statements: Seq[Statement], context: Parser.Context) {
 object Program {
   val empty = Program(Seq.empty, Parser.Context.empty)
 }
+
+case class Value(value: Any, t: Type)

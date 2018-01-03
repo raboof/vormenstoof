@@ -159,7 +159,6 @@ object Parser {
         if (context.types.keys.toSet.contains(t.name)) throw new ParseError(s"Duplicate definition of ${t.name}", head.location)
         else parseSegments(tail, context.copy(types = context.types.updated(t.name, t)))
       case (stm: Statement, context: Context) =>
-        println(s"Parsed $stm, ctx now $context")
         val (c, s) = parseSegments(tail, context)
         (c, stm +: s)
     }

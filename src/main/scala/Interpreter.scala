@@ -9,17 +9,25 @@ object Interpreter {
 
 import Interpreter._
 class Interpreter(program: Program, builtins: Map[String, (Seq[Value], State) => Value]) {
+  val methods = builtins ++ deriveConstructors(program.types.values)
   var state: State = State.empty
 
+  // Probably needs to move out of the interpreter to a separate typechecking/'linking' phase
+  // but fine here for now
+  def deriveConstructors(types: Iterable[Type]): Map[String, (Seq[Value], State) => Value] =
+    types.collect { case r: Record => r.name -> {
+      (arguments: Seq[Value], _: State) => Value(arguments, r)
+    }}.toMap
+
   def evaluate(expression: Expression): Value = expression match {
-    case v: Value =>
-      v
+    case l: Literal =>
+      Value(l.value, l.t)
     case r: Reference =>
       println(state.variables)
       state.variables(r.name)
     case MethodCall(method, arguments, _) =>
       // for now side effects are side effects, will probably change
-      builtins(method)(arguments.map(evaluate), state)
+      methods(method)(arguments.map(evaluate), state)
   }
 
   def execute(statement: Statement): Unit = statement match {
@@ -27,7 +35,6 @@ class Interpreter(program: Program, builtins: Map[String, (Seq[Value], State) =>
       state = state.copy(
         variables = state.variables.updated(to, evaluate(expression)),
         currentStatement = state.currentStatement + 1)
-      println(s"After assignment variables are ${state.variables}")
     case m: MethodCall =>
       evaluate(m)
       state = state.copy(currentStatement = state.currentStatement + 1)
