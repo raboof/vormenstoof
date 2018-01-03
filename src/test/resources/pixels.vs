@@ -1,0 +1,1 @@
+put_pixel red 0 0
