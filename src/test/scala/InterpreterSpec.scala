@@ -13,6 +13,7 @@ class InterpreterSpec extends WordSpec with Matchers {
       val program = Parser.fromResource("/pixels.vs", preamble)
       val i = new Interpreter(program, pixskillflutBuiltins)
       val effects = i.run()
+      effects shouldBe Effects(PutPixel(0, 0), PutPixel(0, 10))
     }
   }
 }
