@@ -13,7 +13,7 @@ object Parser {
   /**
    * Used in several phases:
    * * After the the first parse pass, just looking at the indentation structure.
-   * * After tokenizing the trees
+   * * After 'tokenizing' the trees
    */
   case class Tree(top: String, children: Seq[Tree] = Seq.empty, location: Location) {
     def single = {
@@ -138,23 +138,41 @@ object Parser {
       .getOrElse((parseMethodCall(tree, context), context))
   }
 
+  def tokenize(string: String, location: Location): Seq[Tree] = {
+    val (tree, rest) = tokenizePart(string, location)
+    if (!rest.isEmpty)
+      throw new IllegalStateException(s"Did not expect data, got [$rest]")
+    tree
+  }
+
   // Recursive bounded by the depth of the resulting tree - should be fine.
-  def tokenize(string: String, location: Location): Seq[Tree] = string.headOption match {
+  def tokenizePart(string: String, location: Location): (Seq[Tree], String) = string.headOption match {
+    // End of string
     case None =>
-      Seq.empty
+      (Seq.empty, "")
+    // Whitespace: ignore
     case Some(' ') =>
-      tokenize(string.tail, location.copy(at = location.at + 1))
+      tokenizePart(string.tail, location.copy(at = location.at + 1))
     case Some('i') if string.startsWith("is a") =>
       val token =
         if (string.startsWith("is any")) "is any"
         else if (string.startsWith("is an")) "is an"
         else "is a"
-      Tree(token, Seq.empty, location) +: tokenize(string.drop(token.length), location.copy(at = location.at + token.length))
+      val (a, b) = tokenizePart(string.drop(token.length), location.copy(at = location.at + token.length))
+      (Tree(token, Seq.empty, location) +: a, b)
+    case Some('(') =>
+      val (subtree, rest) = tokenizePart(string.tail, location.copy(at = location.at + 1))
+      // TODO include 'location' in 'rest' and pass it on here
+      val (a, b) = tokenizePart(rest, location)
+      (subtree ++ a, b)
+    case Some(')') =>
+      (Seq.empty, string.tail)
     // TODO string literals
-    // TODO parenthesized subtrees
+    // TODO comments
     case Some(other) =>
       val token = string.takeWhile(_ != ' ')
-      Tree(token, Seq.empty, location) +: tokenize(string.drop(token.length), location.copy(at = location.at + token.length))
+      val (a, b) = tokenizePart(string.drop(token.length), location.copy(at = location.at + token.length))
+      (Tree(token, Seq.empty, location) +: a, b)
   }
 
   def tokenize(tree: Tree): Tree = {

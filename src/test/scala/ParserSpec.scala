@@ -97,6 +97,17 @@ class ParserSpec extends WordSpec with Matchers {
       segments(0) should be(Assignment("answer", MethodCall("color", List(Literal(255, Integer), Literal(0, Integer), Literal(0, Integer), Literal(255, Integer)), null)))
     }
 
+    "parse a parameter with parens" in {
+      import Parser._
+      val trees = Parser.interpretIndentation("test.vs", """
+        |width is an int
+        |height is an int
+        |rect width height = 42
+        |rect (width is an int = 800 ) (height is an int = 600 )""".stripMargin).map(Parser.tokenize)
+      val (_, segments) = Parser.parseSegments(trees, Context.empty)
+      segments(3) should be(Assignment("answer", MethodCall("color", List(Literal(255, Integer), Literal(0, Integer), Literal(0, Integer), Literal(255, Integer)), null)))
+    }
+
     "parse an expression referring to a variable" in {
       import Parser._
 
