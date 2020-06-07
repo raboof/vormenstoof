@@ -73,6 +73,14 @@ class ParserSpec extends WordSpec with Matchers {
       Parser.parseAliasOpt(tree, Context(compositeType)) should be(Some(Alias(compositeType, "r", auto = false)))
     }
 
+    "parse an assignment of a literal to a primitive variable" in {
+      import Parser._
+
+      val trees = Parser.interpretIndentation("test.vs", "int = 42").map(Parser.tokenize)
+      val (_, segments) = Parser.parseSegments(trees, Context.empty)
+      segments(0) should be(Assignment("int", Literal(42, Integer)))
+    }
+
     "parse an assignment of a literal to a variable with an explicit type" in {
       import Parser._
 
