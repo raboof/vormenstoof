@@ -72,9 +72,9 @@ object Parser {
   }
 
   def parseAliasOpt(tree: Tree, context: Context): Option[Alias] = {
-    tree.children.reverse match {
-      case Seq(name, named, t@_*) if named.top == "named" =>
-        Some(Alias(parseType(Tree(tree.top, t, tree.location), context), name.top))
+    tree.children match {
+      case Seq(kind, named, t@_*) if kind.top.startsWith("is a") =>
+        Some(Alias(parseType(Tree(named.top, t, named.location), context), tree.top))
       case _ =>
         None
     }

@@ -60,7 +60,7 @@ class ParserSpec extends WordSpec with Matchers {
     "parse a named variable of primitive type" in {
       import Parser._
 
-      val tree = Parser.tokenize(Tree("int named r", Seq.empty, Location.unknown))
+      val tree = Parser.tokenize(Tree("r is an int", Seq.empty, Location.unknown))
       Parser.parseAliasOpt(tree, Context.empty) should be(Some(Alias(Integer, "r")))
       Parser.parseType(tree, Context.empty) should be(Alias(Integer, "r"))
     }
@@ -69,7 +69,7 @@ class ParserSpec extends WordSpec with Matchers {
       import Parser._
 
       val compositeType = Record("color", Seq.empty)
-      val tree = Parser.tokenize(Tree("color named r", Seq.empty, Location.unknown))
+      val tree = Parser.tokenize(Tree("r is a color", Seq.empty, Location.unknown))
       Parser.parseAliasOpt(tree, Context(compositeType)) should be(Some(Alias(compositeType, "r")))
     }
 
@@ -83,10 +83,10 @@ class ParserSpec extends WordSpec with Matchers {
 
     "parse a record definition" in {
       Parser("test.txt", """record color
-|  int named r
-|  int named g
-|  int named b
-|  int named alpha""".stripMargin) should be(Program(
+|  r is any int
+|  g is any int
+|  b is any int
+|  alpha is an int""".stripMargin) should be(Program(
   Seq.empty,
   Parser.Context(Map(
     "color" -> Record("color", Seq(
