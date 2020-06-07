@@ -38,6 +38,7 @@ class Interpreter(program: Program, builtins: Map[String, (Seq[Value], State) =>
       println(s"Evaluating ${r.name} to ${Printer.print(value)} in ${state.variables.map{ case (k, v) => k + " = " + Printer.print(v)}}")
       (value, Nothing)
     case MethodCall(method, arguments, _) =>
+      println(s"Calling ${method}")
       val evaluated = arguments.map(evaluate)
       val effects = evaluated.map(_._2).reduce((l: Effect, r: Effect) => l.and(r))
       val (value, effect) = methods(method)(evaluated.map(_._1), state)

@@ -73,10 +73,26 @@ class ParserSpec extends WordSpec with Matchers {
       Parser.parseAliasOpt(tree, Context(compositeType)) should be(Some(Alias(compositeType, "r", auto = false)))
     }
 
+    "parse an assignment of a literal to a variable with an explicit type" in {
+      import Parser._
+
+      val trees = Parser.interpretIndentation("test.vs", "answer is an int = 42").map(Parser.tokenize)
+      val (_, segments) = Parser.parseSegments(trees, Context.empty)
+      segments(0) should be(Assignment("answer", Literal(42, Integer)))
+    }
+
+    "parse an assignment of a complex type to a variable with an explicit type" in {
+      import Parser._
+
+      val trees = Parser.interpretIndentation("test.vs", "answer is a color = color 255 0 0 255").map(Parser.tokenize)
+      val (_, segments) = Parser.parseSegments(trees, Context.empty)
+      segments(0) should be(Assignment("answer", MethodCall("color", List(Literal(255, Integer), Literal(0, Integer), Literal(0, Integer), Literal(255, Integer)), null)))
+    }
+
     "parse an expression referring to a variable" in {
       import Parser._
 
-      val trees = Parser.interpretIndentation("test.vs", "int named answer = 42\nprintln answer").map(Parser.tokenize)
+      val trees = Parser.interpretIndentation("test.vs", "answer is an int = 42\nprintln answer").map(Parser.tokenize)
       val (_, segments) = Parser.parseSegments(trees, Context.empty)
       segments(1) should be(MethodCall("println", Seq(Reference("answer", Integer)), null))
     }

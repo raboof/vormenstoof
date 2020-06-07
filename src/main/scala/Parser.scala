@@ -123,7 +123,7 @@ object Parser {
   def parseAssignmentOpt(tree: Tree, context: Context): Option[(Assignment, Context)] = {
     val assignment =
       if (tree.children.size > 2 && tree.children(2).top == "=")
-        Some(Assignment(tree.children(1).single, parseExpression(tree.drop(4), context)))
+        Some(Assignment(tree.top, parseExpression(tree.drop(4), context)))
       else if (tree.children.size >= 1 && tree.children(0).top == "=")
         Some(Assignment(tree.top, parseExpression(tree.drop(2), context)))
       else

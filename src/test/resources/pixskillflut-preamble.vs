@@ -4,4 +4,4 @@ record color
   b is any int
   alpha is any int
 
-color named red = color 255 0 0 255
+red is a color = color 255 0 0 255
