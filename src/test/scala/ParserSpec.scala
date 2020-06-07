@@ -98,7 +98,7 @@ class ParserSpec extends WordSpec with Matchers {
 
       val trees = Parser.interpretIndentation("test.vs", "int = 42").map(Parser.tokenize)
       val (_, segments) = Parser.parseSegments(trees, Context.empty)
-      segments(0) should be(Assignment("int", Literal(42, Integer)))
+      segments(0) should be(Assignment("int", Literal(42, Integer), Integer))
     }
 
     "parse an assignment of a literal to a variable with an explicit type" in {
@@ -106,7 +106,7 @@ class ParserSpec extends WordSpec with Matchers {
 
       val trees = Parser.interpretIndentation("test.vs", "answer is an int = 42").map(Parser.tokenize)
       val (_, segments) = Parser.parseSegments(trees, Context.empty)
-      segments(0) should be(Assignment("answer", Literal(42, Integer)))
+      segments(0) should be(Assignment("answer", Literal(42, Integer), Integer))
     }
 
     "parse an assignment of a complex type to a variable with an explicit type" in {
@@ -114,7 +114,7 @@ class ParserSpec extends WordSpec with Matchers {
 
       val trees = Parser.interpretIndentation("test.vs", "answer is a color = color 255 0 0 255").map(Parser.tokenize)
       val (_, segments) = Parser.parseSegments(trees, Context.empty)
-      segments(0) should be(Assignment("answer", MethodCall("color", List(Literal(255, Integer), Literal(0, Integer), Literal(0, Integer), Literal(255, Integer)), null)))
+      segments(0) should be(Assignment("answer", MethodCall("color", List(Literal(255, Integer), Literal(0, Integer), Literal(0, Integer), Literal(255, Integer)), null), null))
     }
 
     "parse a parameter with parens" in {
@@ -123,11 +123,12 @@ class ParserSpec extends WordSpec with Matchers {
         |width is an int
         |height is an int
         |rect width height = 42
-        |rect (width is an int = 800 ) (height is an int = 600 )""".stripMargin).map(Parser.tokenize)
+        |rect (width = 800) (height = 600)""".stripMargin).map(Parser.tokenize)
       val (_, segments) = Parser.parseSegments(trees, Context.empty)
       val MethodCall("rect", params, _) = segments(3)
-      // TODO the params aren't parsed correctly yet, but at least they're tokenized:
-      params.length should be(2)
+      // TODO once we support type scoping, the assignment type likely should not be
+      // 'Integer' but the method-local 'width' and 'height' types
+      params should be(List(Assignment("width", Literal(800, Integer), Integer), Assignment("height", Literal(600, Integer), Integer)))
     }
 
     "parse an expression referring to a variable" in {

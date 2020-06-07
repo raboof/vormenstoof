@@ -65,7 +65,7 @@ object Parser {
     result.trees
   }
 
-  case class Context(val types: Map[String, Type], val variables: Map[String, Type])
+  case class Context(types: Map[String, Type], variables: Map[String, Type])
   object Context {
     def apply(t: Type) = new Context(Map(t.name -> t), Map.empty)
     val empty = new Context(Map.empty, Map.empty)
@@ -107,7 +107,14 @@ object Parser {
     MethodCall(tree.top, tree.children.map(child => parseExpression(child, context)), null)
 
   def parseReferenceOpt(tree: Tree, context: Context): Option[Reference] =
-    context.variables.get(tree.top).map(t => Reference(tree.top, t))
+    tree match {
+      case Tree(top, Seq(), _) =>
+        context.variables.get(top).map(t => Reference(top, t))
+      case Tree(top, Seq(Tree("=", List(), _), Tree(ref, _, _)), _) =>
+        context.variables.get(ref).map(t => Reference(ref, t))
+      case _ =>
+        None
+    }
 
   def parseLiteralOpt(tree: Tree): Option[Literal] = {
     if (tree.top.head.isDigit) Some(Literal(tree.top.toInt, Integer))
@@ -115,18 +122,27 @@ object Parser {
   }
 
   def parseExpression(tree: Tree, context: Context): Expression = {
-    parseLiteralOpt(tree)
+    parseInlineAssignmentOpt(tree, context)
+      .orElse(parseLiteralOpt(tree))
       .orElse(parseReferenceOpt(tree, context))
       .getOrElse(parseMethodCall(tree, context))
   }
 
+  // An inline assignment, like in a method call, doesn't change the context
+  def parseInlineAssignmentOpt(tree: Tree, context: Context): Option[Expression] =
+    parseAssignmentOpt(tree, context)
+      .map { case (assignment, _) => assignment }
+
   def parseAssignmentOpt(tree: Tree, context: Context): Option[(Assignment, Context)] = {
+    // TODO allow 'as a' inline in an assignment
     val assignment =
-      if (tree.children.size > 2 && tree.children(2).top == "=")
-        Some(Assignment(tree.top, parseExpression(tree.drop(4), context)))
-      else if (tree.children.size >= 1 && tree.children(0).top == "=")
-        Some(Assignment(tree.top, parseExpression(tree.drop(2), context)))
-      else
+      if (tree.children.size > 2 && tree.children(2).top == "=") {
+        val rhs = parseExpression(tree.drop(4), context)
+        Some(Assignment(tree.top, rhs, context.types.getOrElse(tree.top, rhs.t)))
+      } else if (tree.children.size >= 1 && tree.children(0).top == "=") {
+        val rhs = parseExpression(tree.drop(2), context)
+        Some(Assignment(tree.top, rhs, context.types.getOrElse(tree.top, rhs.t)))
+      } else
        None
 
      assignment.map(a => (a, context.copy(variables = context.variables.updated(a.name, a.value.t))))

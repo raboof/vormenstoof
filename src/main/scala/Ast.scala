@@ -16,6 +16,8 @@ case object Integer extends Primitive {
   val name = "int"
 }
 case class Record(name: String, types: Seq[Type]) extends Type
+case class TypeNotFound(name: String) extends Type
+
 
 /** Something that resolves to a value */
 sealed trait Expression {
@@ -26,7 +28,8 @@ case class Reference(name: String, t: Type) extends Expression
 
 sealed trait Statement extends Segment
 case class MethodCall(method: String, arguments: Seq[Expression], t: Type) extends Statement with Expression
-case class Assignment(name: String, value: Expression) extends Statement
+// TODO Not sure we should have both 'name' and 't'
+case class Assignment(name: String, value: Expression, t: Type) extends Statement with Expression
 
 case class Program(statements: Seq[Statement], context: Parser.Context) {
   def +(filename: String, text: String) = Parser(filename, text, this)

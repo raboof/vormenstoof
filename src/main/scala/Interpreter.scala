@@ -46,7 +46,7 @@ class Interpreter(program: Program, builtins: Map[String, (Seq[Value], State) =>
   }
 
   def execute(statement: Statement): Effect = statement match {
-    case Assignment(to, expression) =>
+    case Assignment(to, expression, _t) =>
       val (value, effect) = evaluate(expression)
       state = state.copy(
         variables = state.variables.updated(to, value),
