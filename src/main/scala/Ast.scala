@@ -5,7 +5,12 @@ sealed trait Segment
 sealed trait Type extends Segment {
   val name: String
 }
-case class Alias(from: Type, name: String) extends Type
+
+/**
+ * @param auto true if types can be converted automatically ('is any'), false if they cannot ('is a(n)')
+ */
+case class Alias(from: Type, name: String, auto: Boolean) extends Type
+
 sealed trait Primitive extends Type
 case object Integer extends Primitive {
   val name = "int"

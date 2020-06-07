@@ -8,9 +8,9 @@ class ParserSpec extends WordSpec with Matchers {
       import Parser._
 
       Parser.interpretIndentation("test.txt", """
-|foo
-|  bar
-|    baz""".stripMargin) match {
+        |foo
+        |  bar
+        |    baz""".stripMargin) match {
   case List(Tree("foo", Seq(Tree("bar", Seq(Tree("baz", _, _)), _)), _)) => // ok
 }
     }
@@ -61,8 +61,8 @@ class ParserSpec extends WordSpec with Matchers {
       import Parser._
 
       val tree = Parser.tokenize(Tree("r is an int", Seq.empty, Location.unknown))
-      Parser.parseAliasOpt(tree, Context.empty) should be(Some(Alias(Integer, "r")))
-      Parser.parseType(tree, Context.empty) should be(Alias(Integer, "r"))
+      Parser.parseAliasOpt(tree, Context.empty) should be(Some(Alias(Integer, "r", auto = false)))
+      Parser.parseType(tree, Context.empty) should be(Alias(Integer, "r", auto = false))
     }
 
     "parse a named variable of composite type" in {
@@ -70,7 +70,7 @@ class ParserSpec extends WordSpec with Matchers {
 
       val compositeType = Record("color", Seq.empty)
       val tree = Parser.tokenize(Tree("r is a color", Seq.empty, Location.unknown))
-      Parser.parseAliasOpt(tree, Context(compositeType)) should be(Some(Alias(compositeType, "r")))
+      Parser.parseAliasOpt(tree, Context(compositeType)) should be(Some(Alias(compositeType, "r", auto = false)))
     }
 
     "parse an expression referring to a variable" in {
@@ -90,10 +90,10 @@ class ParserSpec extends WordSpec with Matchers {
   Seq.empty,
   Parser.Context(Map(
     "color" -> Record("color", Seq(
-      Alias(Integer, "r"),
-      Alias(Integer, "g"),
-      Alias(Integer, "b"),
-      Alias(Integer, "alpha")
+      Alias(Integer, "r", auto = true),
+      Alias(Integer, "g", auto = true),
+      Alias(Integer, "b", auto = true),
+      Alias(Integer, "alpha", auto = false)
     ))), Map.empty)))
     }
 
