@@ -164,13 +164,13 @@ object Parser {
       val (subtree, rest) = tokenizePart(string.tail, location.copy(at = location.at + 1))
       // TODO include 'location' in 'rest' and pass it on here
       val (a, b) = tokenizePart(rest, location)
-      (subtree ++ a, b)
+      (Tree(subtree.head.single, subtree.tail, location) +: a, b)
     case Some(')') =>
       (Seq.empty, string.tail)
     // TODO string literals
     // TODO comments
     case Some(other) =>
-      val token = string.takeWhile(_ != ' ')
+      val token = string.takeWhile(c => c != ' ' && c != '(' && c != ')')
       val (a, b) = tokenizePart(string.drop(token.length), location.copy(at = location.at + token.length))
       (Tree(token, Seq.empty, location) +: a, b)
   }
