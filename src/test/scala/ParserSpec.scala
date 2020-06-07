@@ -47,6 +47,16 @@ class ParserSpec extends WordSpec with Matchers {
       }
     }
 
+    "tokenize 'is an' as a separate token" in {
+      import Parser._
+
+      val tree = Parser.tokenize(Tree("r is an int", Seq.empty, Location.unknown))
+      tree.top should be ("r")
+      tree.children.size should be(2)
+      tree.children(0).top should be("is an")
+      tree.children(1).top should be("int")
+    }
+
     "parse a named variable of primitive type" in {
       import Parser._
 

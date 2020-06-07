@@ -10,6 +10,11 @@ object Parser {
   }
   class ParseError(message: String, val at: Location) extends Throwable(s"$at: $message")
 
+  /**
+   * Used in several phases:
+   * * After the the first parse pass, just looking at the indentation structure.
+   * * After tokenizing the trees
+   */
   case class Tree(top: String, children: Seq[Tree] = Seq.empty, location: Location) {
     def single = {
       require(children.isEmpty)
@@ -133,17 +138,23 @@ object Parser {
       .getOrElse((parseMethodCall(tree, context), context))
   }
 
-  // Recursive with the depth of the tree - should be fine.
+  // Recursive bounded by the depth of the resulting tree - should be fine.
   def tokenize(string: String, location: Location): Seq[Tree] = string.headOption match {
     case None =>
       Seq.empty
     case Some(' ') =>
       tokenize(string.tail, location.copy(at = location.at + 1))
+    case Some('i') if string.startsWith("is a") =>
+      val token =
+        if (string.startsWith("is any")) "is any"
+        else if (string.startsWith("is an")) "is an"
+        else "is a"
+      Tree(token, Seq.empty, location) +: tokenize(string.drop(token.length), location.copy(at = location.at + token.length))
     // TODO string literals
     // TODO parenthesized subtrees
     case Some(other) =>
       val token = string.takeWhile(_ != ' ')
-      Tree(token, Seq.empty, location) +: tokenize(string.drop(token.size), location.copy(at = location.at + token.size))
+      Tree(token, Seq.empty, location) +: tokenize(string.drop(token.length), location.copy(at = location.at + token.length))
   }
 
   def tokenize(tree: Tree): Tree = {
