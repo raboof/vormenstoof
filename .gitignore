@@ -1,2 +1,6 @@
 /target
+/core/js/target
+/core/jvm/target
+/core/shared/target
 /project/target
+/project/project
